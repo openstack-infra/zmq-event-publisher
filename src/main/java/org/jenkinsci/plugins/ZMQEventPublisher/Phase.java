@@ -1,4 +1,5 @@
 /*
+ * Copyright 2013 Hewlett-Packard Development Company, L.P.
  * Copyright Authors of the Jenkins Notification Plugin
  *
  * Licensed under the Apache License, Version 2.0 (the "License");

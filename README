@@ -1,0 +1,39 @@
+This is a Jenkins plugin that will publish Jenkins Job run events
+(start, complete, finish) to a ZMQ PUB socket. By default the PUB
+socket is on TCP port 8888 and no Job events will be published.
+You can choose to enable event publishing for all jobs in the
+Jenkins' global config or enable the plugin on a per job basis.
+
+To build this plugin you will need to have libzmq installed on your
+Jenkins server. You will also need to build a local copy of jzmq
+for the architecture of your Jenkins server. To get a build of jzmq
+that worked I had to tweak jzmq version 2.1.0 slightly. You can
+get that version at:
+
+    https://github.com/cboylan/jzmq
+
+First clone the above repository and check out the 2.1.0-build-fix
+branch. Then run the following commands to build jzmq:
+
+    ./autogen.sh && ./configure && make
+    #I had to skip tests as they would not run
+    maven clean install -Dmaven.test.skip=true
+
+Now you can build this plugin:
+
+    maven clean package
+    # Copy target/zmq-event-publisher.hpi to the Jenkins
+    # plugin dir and restart Jenkins.
+
+All of this will be much easier if you use the same OS and CPU
+architecture on your build host as on the Jenkins server.
+
+TODO:
+Better error handling (eg bind errors due to port conflicts)
+Avoid reading in the global config for each event if possible.
+Cleanup config.jelly for the non global Job config.
+
+This plugin borrows heavily from the Jenkins Notification Plugin
+https://github.com/jenkinsci/notification-plugin. That plugin
+does much of the same work and where applicable I have gone the
+easy route and copied the work they have done.
