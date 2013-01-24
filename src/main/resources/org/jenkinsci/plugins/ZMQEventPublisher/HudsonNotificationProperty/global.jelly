@@ -1,0 +1,12 @@
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+  <f:section title="ZMQ Event Publisher">
+    <f:entry title="Enable on all Jobs"
+      description="Check if we should publish events for all jobs.">
+      <f:checkbox name="zmqpublisher.globallyEnabled" checked="${descriptor.isGloballyEnabled()}" />
+    </f:entry>
+    <f:entry title="TCP port to publish on"
+      description="Bind to this TCP port and publish events on it">
+      <f:textbox name="zmqpublisher.port" value="${descriptor.getPort()}" />
+    </f:entry>
+  </f:section>
+</j:jelly>
