@@ -27,8 +27,8 @@ import hudson.model.listeners.RunListener;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.zeromq.ZMQ;
-import org.zeromq.ZMQException;
+import org.jeromq.ZMQ;
+import org.jeromq.ZMQException;
 
 /*
  * Listener to publish Jenkins build events through ZMQ
@@ -68,7 +68,6 @@ public class RunListenerImpl extends RunListener<Run> {
             LOGGER.log(Level.INFO,
                 String.format("Changing ZMQ PUB port from %d to %d", port, tmpPort));
             try {
-                publisher.unbind(bind_addr);
                 publisher.close();
             } catch (ZMQException e) {
                 /* Let the garbage collector sort out cleanup */
