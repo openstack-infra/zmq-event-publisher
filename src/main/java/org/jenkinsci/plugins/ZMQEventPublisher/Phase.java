@@ -40,12 +40,15 @@ public enum Phase {
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public String handlePhase(Run run, String status, TaskListener listener) {
-        HudsonNotificationProperty property = (HudsonNotificationProperty) run.getParent().getProperty(HudsonNotificationProperty.class);
-        if (property != null) {
-            HudsonNotificationProperty.HudsonNotificationPropertyDescriptor globalProperty = property.getDescriptor();
-            if (globalProperty.isGloballyEnabled() || property.isEnabled()) {
-                return buildMessage(run.getParent(), run, status);
-            }
+        Hudson hudson = Hudson.getInstance();
+        HudsonNotificationProperty property = (HudsonNotificationProperty)
+            run.getParent().getProperty(HudsonNotificationProperty.class);
+        HudsonNotificationProperty.HudsonNotificationPropertyDescriptor globalProperty =
+            (HudsonNotificationProperty.HudsonNotificationPropertyDescriptor)
+                hudson.getDescriptor(HudsonNotificationProperty.class);
+        if ((property != null && property.isEnabled()) ||
+                (globalProperty != null && globalProperty.isGloballyEnabled())) {
+            return buildMessage(run.getParent(), run, status);
         }
         return null;
     }

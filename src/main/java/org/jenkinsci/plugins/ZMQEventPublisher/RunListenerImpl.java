@@ -19,6 +19,7 @@ package org.jenkinsci.plugins.ZMQEventPublisher;
 
 import hudson.Extension;
 import hudson.EnvVars;
+import hudson.model.Hudson;
 import hudson.model.Result;
 import hudson.model.Run;
 import hudson.model.TaskListener;
@@ -48,9 +49,11 @@ public class RunListenerImpl extends RunListener<Run> {
     }
 
     private int getPort(Run build) {
-        HudsonNotificationProperty property = (HudsonNotificationProperty) build.getParent().getProperty(HudsonNotificationProperty.class);
-        if (property != null) {
-            HudsonNotificationProperty.HudsonNotificationPropertyDescriptor globalProperty = property.getDescriptor();
+        Hudson hudson = Hudson.getInstance();
+        HudsonNotificationProperty.HudsonNotificationPropertyDescriptor globalProperty =
+            (HudsonNotificationProperty.HudsonNotificationPropertyDescriptor)
+                hudson.getDescriptor(HudsonNotificationProperty.class);
+        if (globalProperty != null) {
             return globalProperty.getPort();
         }
         return 8888;
