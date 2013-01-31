@@ -12,8 +12,11 @@ history and you will find the old versions of this plugin that
 depended on jzmq.
 
 TODO:
-Avoid reading in the global config for each event if possible.
-Cleanup config.jelly for the non global Job config.
+- Avoid reading in the global config for each event if possible.
+- Need to allow ZMQRunnable thread to die if something truly
+  unexpected happens. The RunListener should then start a new
+  DaemonThread to handle further events.
+- Cleanup config.jelly for the non global Job config.
 
 This plugin borrows heavily from the Jenkins Notification Plugin
 https://github.com/jenkinsci/notification-plugin. That plugin

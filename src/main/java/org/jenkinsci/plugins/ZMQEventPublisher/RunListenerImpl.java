@@ -18,90 +18,44 @@
 package org.jenkinsci.plugins.ZMQEventPublisher;
 
 import hudson.Extension;
-import hudson.EnvVars;
-import hudson.model.Hudson;
 import hudson.model.Result;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.model.listeners.RunListener;
+import hudson.util.DaemonThreadFactory;
 
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import org.jeromq.ZMQ;
-import org.jeromq.ZMQException;
 
 /*
  * Listener to publish Jenkins build events through ZMQ
  */
 @Extension
 public class RunListenerImpl extends RunListener<Run> {
-    public static final Logger LOGGER = Logger.getLogger(RunListenerImpl.class.getName());
-
-    private int port;
-    private String bind_addr;
-    private ZMQ.Context context;
-    private ZMQ.Socket publisher;
+    public static final Logger LOGGER =
+        Logger.getLogger(RunListenerImpl.class.getName());
+    private final LinkedBlockingQueue<String> queue =
+        new LinkedBlockingQueue<String>(queueLength);
+    // ZMQ has a high water mark of 1000 events.
+    private static final int queueLength = 1024;
+    private static final DaemonThreadFactory threadFactory =
+        new DaemonThreadFactory();
+    private ZMQRunnable ZMQRunner;
+    private Thread thread;
 
     public RunListenerImpl() {
         super(Run.class);
-        context = ZMQ.context(1);
-    }
-
-    private int getPort(Run build) {
-        Hudson hudson = Hudson.getInstance();
-        HudsonNotificationProperty.HudsonNotificationPropertyDescriptor globalProperty =
-            (HudsonNotificationProperty.HudsonNotificationPropertyDescriptor)
-                hudson.getDescriptor(HudsonNotificationProperty.class);
-        if (globalProperty != null) {
-            return globalProperty.getPort();
-        }
-        return 8888;
-    }
-
-    private ZMQ.Socket bindSocket(Run build) {
-        int tmpPort = getPort(build);
-        if (publisher == null) {
-            port = tmpPort;
-            LOGGER.log(Level.INFO,
-                String.format("Binding ZMQ PUB to port %d", port));
-            publisher = bindSocket(port);
-        }
-        else if (tmpPort != port) {
-            LOGGER.log(Level.INFO,
-                String.format("Changing ZMQ PUB port from %d to %d", port, tmpPort));
-            try {
-                publisher.close();
-            } catch (ZMQException e) {
-                /* Let the garbage collector sort out cleanup */
-                LOGGER.log(Level.INFO,
-                    "Unable to close ZMQ PUB socket. " + e.toString(), e);
-            }
-            port = tmpPort;
-            publisher = bindSocket(port);
-        }
-        return publisher;
-    }
-
-    private ZMQ.Socket bindSocket(int port) {
-        ZMQ.Socket socket;
-        try {
-            socket = context.socket(ZMQ.PUB);
-            bind_addr = String.format("tcp://*:%d", port);
-            socket.bind(bind_addr);
-        } catch (ZMQException e) {
-            LOGGER.log(Level.SEVERE,
-                "Unable to bind ZMQ PUB socket. " + e.toString(), e);
-            socket = null;
-        }
-        return socket;
+        ZMQRunner = new ZMQRunnable(queue);
+        thread = threadFactory.newThread(ZMQRunner);
+        thread.start();
     }
 
     @Override
     public void onCompleted(Run build, TaskListener listener) {
         String event = "onCompleted";
         String json = Phase.COMPLETED.handlePhase(build, getStatus(build), listener);
-        sendEvent(build, event, json);
+        sendEvent(event, json);
     }
 
     /* Currently not emitting onDeleted events. This should be fixed.
@@ -117,28 +71,25 @@ public class RunListenerImpl extends RunListener<Run> {
     public void onFinalized(Run build) {
         String event = "onFinalized";
         String json = Phase.FINISHED.handlePhase(build, getStatus(build), TaskListener.NULL);
-        sendEvent(build, event, json);
+        sendEvent(event, json);
     }
 
     @Override
     public void onStarted(Run build, TaskListener listener) {
         String event = "onStarted";
         String json = Phase.STARTED.handlePhase(build, getStatus(build), listener);
-        sendEvent(build, event, json);
+        sendEvent(event, json);
     }
 
-    private void sendEvent(Run build, String event, String json) {
-        ZMQ.Socket socket;
+    private void sendEvent(String event, String json) {
         if (json != null) {
-            socket = bindSocket(build);
-            if (socket != null) {
-                event = event + " " + json;
-                try {
-                    socket.send(event.getBytes(), 0);
-                } catch (ZMQException e) {
-                    LOGGER.log(Level.INFO,
-                        "Unable to send event. " + e.toString(), e);
-                }
+            event = event + " " + json;
+            // Offer the event. If the queue is full this will not block.
+            // We may drop events but this should prevent starvation in
+            // the calling Jenkins threads.
+            if (!queue.offer(event)) {
+                LOGGER.log(Level.INFO,
+                    "Unable to add event to ZMQ queue.");
             }
         }
     }
