@@ -23,6 +23,8 @@ import hudson.model.Job;
 import hudson.model.ParameterValue;
 import hudson.model.ParametersAction;
 import hudson.model.Run;
+import hudson.model.Executor;
+import hudson.model.Computer;
 import hudson.model.TaskListener;
 
 import java.io.IOException;
@@ -69,6 +71,14 @@ public enum Phase {
         String rootUrl = Hudson.getInstance().getRootUrl();
         if (rootUrl != null) {
             buildState.setFullUrl(rootUrl + run.getUrl());
+        }
+
+        Executor executor = run.getExecutor();
+        if (executor != null) {
+            Computer computer = executor.getOwner();
+            if (computer != null) {
+                buildState.setNodeName(computer.getName());
+            }
         }
 
         jobState.setBuild(buildState);

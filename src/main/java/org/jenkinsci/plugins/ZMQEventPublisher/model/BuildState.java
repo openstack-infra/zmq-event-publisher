@@ -34,6 +34,8 @@ public class BuildState {
 
     private Map<String, String> parameters;
 
+    private String nodeName;
+
     public int getNumber() {
         return number;
     }
@@ -80,5 +82,13 @@ public class BuildState {
 
     public void setParameters(Map<String, String> params) {
         this.parameters = params;
+    }
+
+    public String getNodeName() {
+        return nodeName;
+    }
+
+    public void setNodeName(String nodeName) {
+        this.nodeName = nodeName;
     }
 }
