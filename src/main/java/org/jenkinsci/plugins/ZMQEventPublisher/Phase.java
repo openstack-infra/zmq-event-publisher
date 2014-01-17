@@ -18,7 +18,6 @@ package org.jenkinsci.plugins.ZMQEventPublisher;
 
 import hudson.EnvVars;
 import hudson.model.AbstractBuild;
-import hudson.model.Hudson;
 import hudson.model.Job;
 import hudson.model.ParameterValue;
 import hudson.model.ParametersAction;
@@ -26,28 +25,26 @@ import hudson.model.Run;
 import hudson.model.Executor;
 import hudson.model.Computer;
 import hudson.model.TaskListener;
-
-import java.io.IOException;
-import java.util.List;
+import jenkins.model.Jenkins;
 
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
-import org.jenkinsci.plugins.ZMQEventPublisher.model.BuildState;;
-import org.jenkinsci.plugins.ZMQEventPublisher.model.JobState;;
+import org.jenkinsci.plugins.ZMQEventPublisher.model.BuildState;
+import org.jenkinsci.plugins.ZMQEventPublisher.model.JobState;
 
 public enum Phase {
     STARTED, COMPLETED, FINISHED;
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public String handlePhase(Run run, String status, TaskListener listener) {
-        Hudson hudson = Hudson.getInstance();
+        Jenkins jenkins = Jenkins.getInstance();
         HudsonNotificationProperty property = (HudsonNotificationProperty)
             run.getParent().getProperty(HudsonNotificationProperty.class);
         HudsonNotificationProperty.HudsonNotificationPropertyDescriptor globalProperty =
             (HudsonNotificationProperty.HudsonNotificationPropertyDescriptor)
-                hudson.getDescriptor(HudsonNotificationProperty.class);
+                jenkins.getDescriptor(HudsonNotificationProperty.class);
         if ((property != null && property.isEnabled()) ||
                 (globalProperty != null && globalProperty.isGloballyEnabled())) {
             return buildMessage(run.getParent(), run, status);
@@ -68,7 +65,8 @@ public enum Phase {
         buildState.setPhase(this);
         buildState.setStatus(status);
 
-        String rootUrl = Hudson.getInstance().getRootUrl();
+        Jenkins jenkins = Jenkins.getInstance();
+        String rootUrl = jenkins.getRootUrl();
         if (rootUrl != null) {
             buildState.setFullUrl(rootUrl + run.getUrl());
         }
@@ -78,6 +76,7 @@ public enum Phase {
             Computer computer = executor.getOwner();
             if (computer != null) {
                 buildState.setNodeName(computer.getName());
+                buildState.setHostName(jenkins.getDisplayName());
             }
         }
 

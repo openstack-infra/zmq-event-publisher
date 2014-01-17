@@ -36,6 +36,8 @@ public class BuildState {
 
     private String nodeName;
 
+    private String hostName;
+
     public int getNumber() {
         return number;
     }
@@ -90,5 +92,13 @@ public class BuildState {
 
     public void setNodeName(String nodeName) {
         this.nodeName = nodeName;
+    }
+
+    public String getHostName() {
+        return hostName;
+    }
+
+    public void setHostName(String hostName) {
+        this.hostName = hostName;
     }
 }

@@ -16,7 +16,7 @@
 
 package org.jenkinsci.plugins.ZMQEventPublisher;
 
-import hudson.model.Hudson;
+import jenkins.model.Jenkins;
 
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Level;
@@ -42,10 +42,10 @@ public class ZMQRunnable implements Runnable {
     }
 
     private int getPort() {
-        Hudson hudson = Hudson.getInstance();
+        Jenkins jenkins = Jenkins.getInstance();
         HudsonNotificationProperty.HudsonNotificationPropertyDescriptor globalProperty =
             (HudsonNotificationProperty.HudsonNotificationPropertyDescriptor)
-                hudson.getDescriptor(HudsonNotificationProperty.class);
+                jenkins.getDescriptor(HudsonNotificationProperty.class);
         if (globalProperty != null) {
             return globalProperty.getPort();
         }
@@ -92,7 +92,7 @@ public class ZMQRunnable implements Runnable {
         String event;
         while(true) {
             try {
-                event = queue.take();;
+                event = queue.take();
                 bindSocket();
                 if (publisher != null) {
                     try {
