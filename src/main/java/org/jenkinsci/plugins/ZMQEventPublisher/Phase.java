@@ -38,7 +38,7 @@ public enum Phase {
     STARTED, COMPLETED, FINISHED;
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    public String handlePhase(Run run, String status, TaskListener listener) {
+    public String handlePhase(Run run, String status, String masterName, TaskListener listener) {
         Jenkins jenkins = Jenkins.getInstance();
         HudsonNotificationProperty property = (HudsonNotificationProperty)
             run.getParent().getProperty(HudsonNotificationProperty.class);
@@ -47,7 +47,7 @@ public enum Phase {
                 jenkins.getDescriptor(HudsonNotificationProperty.class);
         if ((property != null && property.isEnabled()) ||
                 (globalProperty != null && globalProperty.isGloballyEnabled())) {
-            return buildMessage(run.getParent(), run, status);
+            return buildMessage(run.getParent(), run, status, masterName);
         }
         return null;
     }
@@ -55,7 +55,7 @@ public enum Phase {
     private Gson gson = new GsonBuilder().setFieldNamingPolicy(
         FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create();
 
-    private String buildMessage(Job job, Run run, String status) {
+    private String buildMessage(Job job, Run run, String status, String masterName) {
         JobState jobState = new JobState();
         jobState.setName(job.getName());
         jobState.setUrl(job.getUrl());
@@ -70,13 +70,15 @@ public enum Phase {
         if (rootUrl != null) {
             buildState.setFullUrl(rootUrl + run.getUrl());
         }
+        if (masterName != null) {
+            buildState.setHostName(masterName);
+        }
 
         Executor executor = run.getExecutor();
         if (executor != null) {
             Computer computer = executor.getOwner();
             if (computer != null) {
                 buildState.setNodeName(computer.getName());
-                buildState.setHostName(jenkins.getDisplayName());
             }
         }
 

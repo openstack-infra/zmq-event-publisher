@@ -18,12 +18,16 @@
 package org.jenkinsci.plugins.ZMQEventPublisher;
 
 import hudson.Extension;
+import hudson.model.Computer;
 import hudson.model.Result;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.model.listeners.RunListener;
 import hudson.util.DaemonThreadFactory;
 
+import jenkins.model.Jenkins;
+
+import java.net.InetAddress;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -43,18 +47,35 @@ public class RunListenerImpl extends RunListener<Run> {
         new DaemonThreadFactory();
     private ZMQRunnable ZMQRunner;
     private Thread thread;
+    private String masterName;
 
     public RunListenerImpl() {
         super(Run.class);
         ZMQRunner = new ZMQRunnable(queue);
         thread = threadFactory.newThread(ZMQRunner);
         thread.start();
+
+        Computer master = null;
+        String hostname = null;
+        // query Jenkins for master's name
+        try {
+            master = Jenkins.getInstance().getComputer("");
+            if (master != null) {
+                hostname = master.getHostName();
+            }
+            else {
+                // master node may not be enabled so get masterName from system
+                hostname = java.net.InetAddress.getLocalHost().getHostName();
+            }
+        } catch (Exception e) {
+        }
+        masterName = hostname;
     }
 
     @Override
     public void onCompleted(Run build, TaskListener listener) {
         String event = "onCompleted";
-        String json = Phase.COMPLETED.handlePhase(build, getStatus(build), listener);
+        String json = Phase.COMPLETED.handlePhase(build, getStatus(build), masterName, listener);
         sendEvent(event, json);
     }
 
@@ -70,14 +91,14 @@ public class RunListenerImpl extends RunListener<Run> {
     @Override
     public void onFinalized(Run build) {
         String event = "onFinalized";
-        String json = Phase.FINISHED.handlePhase(build, getStatus(build), TaskListener.NULL);
+        String json = Phase.FINISHED.handlePhase(build, getStatus(build), masterName, TaskListener.NULL);
         sendEvent(event, json);
     }
 
     @Override
     public void onStarted(Run build, TaskListener listener) {
         String event = "onStarted";
-        String json = Phase.STARTED.handlePhase(build, getStatus(build), listener);
+        String json = Phase.STARTED.handlePhase(build, getStatus(build), masterName, listener);
         sendEvent(event, json);
     }
 
