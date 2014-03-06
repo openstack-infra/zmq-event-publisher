@@ -22,3 +22,23 @@ This plugin borrows heavily from the Jenkins Notification Plugin
 https://github.com/jenkinsci/notification-plugin. That plugin
 does much of the same work and where applicable I have gone the
 easy route and copied the work they have done.
+
+Contributing
+------------
+
+To browse the latest code, see:
+https://git.openstack.org/cgit/openstack-infra/zmq-event-publisher/tree/
+To clone the latest code, use
+`git clone git://git.openstack.org/openstack-infra/zmq-event-publisher`
+
+Bugs are handled at: https://bugs.launchpad.net/openstack-ci
+
+Code reviews are handled by gerrit. The gerrit in
+use is http://review.openstack.org
+
+Use `git review` to submit patches (after creating a gerrit account that
+links to your launchpad account). Example::
+
+    # Do your commits
+    $ git review
+    # Enter your username if prompted
