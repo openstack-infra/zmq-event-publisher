@@ -31,7 +31,7 @@ https://git.openstack.org/cgit/openstack-infra/zmq-event-publisher/tree/
 To clone the latest code, use
 `git clone git://git.openstack.org/openstack-infra/zmq-event-publisher`
 
-Bugs are handled at: https://bugs.launchpad.net/openstack-ci
+Bugs are handled at: https://storyboard.openstack.org/#!/project/750
 
 Code reviews are handled by gerrit. The gerrit in
 use is http://review.openstack.org
