@@ -96,11 +96,14 @@ public class ZMQRunnable implements Runnable {
                 bindSocket();
                 if (publisher != null) {
                     try {
+                        LOGGER.log(Level.FINE, "Publishing ZMQ event: " + event);
                         publisher.send(event.getBytes(), 0);
                     } catch (ZMQException e) {
                         LOGGER.log(Level.INFO,
                             "Unable to send event. " + e.toString(), e);
                     }
+                } else {
+                    LOGGER.log(Level.WARNING, "ZMQ Publisher is NULL");
                 }
             }
             // Catch all exceptions so that this thread does not die.
