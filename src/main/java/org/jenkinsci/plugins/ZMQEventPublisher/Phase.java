@@ -24,6 +24,7 @@ import hudson.model.ParametersAction;
 import hudson.model.Run;
 import hudson.model.Executor;
 import hudson.model.Computer;
+import hudson.model.Node;
 import hudson.model.TaskListener;
 import jenkins.model.Jenkins;
 
@@ -79,6 +80,10 @@ public enum Phase {
             Computer computer = executor.getOwner();
             if (computer != null) {
                 buildState.setNodeName(computer.getName());
+                Node node = computer.getNode();
+                if (node != null) {
+                    buildState.setNodeDescription(node.getNodeDescription());
+                }
             }
         }
 
