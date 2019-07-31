@@ -1,3 +1,0 @@
-<div>
-  This plugin publishes Jenkins build events in JSON as a ZMQ Publisher.
-</div>
